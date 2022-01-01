@@ -12,6 +12,26 @@
 
 #include <iostream>
 
-int main() {
-    std::cout << "test hello";
+#include "ranked.h"
+
+bool test_api_inc() {
+  std::string table("test-table");
+  std::string key("test-key");
+  int number = 1;
+
+  ranked::instance.inc(table, key, number);
+
+  return ranked::instance.get(table, key) == number;
 }
+
+void test_api_incp(std::string table, std::string key, int number, int remain) {
+  std::string table("test-table");
+  std::string key("test-key");
+  int number = 1;
+
+  ranked::instance.incp(table, key, number);
+
+  return ranked::instance.get(table, key) == number;
+}
+
+int main() { std::cout << "test hello"; }
