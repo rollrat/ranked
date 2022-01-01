@@ -19,19 +19,29 @@ bool test_api_inc() {
   std::string key("test-key");
   int number = 1;
 
-  ranked::instance.inc(table, key, number);
+  ranked::RankedContext::Instance->inc(table, key, number);
 
-  return ranked::instance.get(table, key) == number;
+  return **ranked::RankedContext::Instance->get(table, key) == number;
 }
 
-void test_api_incp(std::string table, std::string key, int number, int remain) {
+bool test_api_incp() {
   std::string table("test-table");
   std::string key("test-key");
   int number = 1;
+  int remain = 5;
 
-  ranked::instance.incp(table, key, number);
+  ranked::RankedContext::Instance->incp(table, key, number, remain);
 
-  return ranked::instance.get(table, key) == number;
+  return **ranked::RankedContext::Instance->get(table, key) == number;
 }
 
-int main() { std::cout << "test hello"; }
+void test(std::string name, bool succ) {
+  std::cout << name << ": " << (succ ? "success" : "fail") << '\n';
+}
+
+int main() {
+  ranked::RankedContext::InitInstance();
+
+  test("inc", test_api_inc());
+  test("incp", test_api_incp());
+}
