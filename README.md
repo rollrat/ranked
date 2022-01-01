@@ -1,6 +1,6 @@
 # ranked
 
-ranked는 redis의 sorted set와 같은 기능을 제공하며, periodic(daily, weekly, monthly, alltime etc..)한 데이터를 조회하는데에 최적화되어 있다.
+ranked는 redis의 sorted map와 같은 기능을 제공하며, periodic(daily, weekly, monthly, alltime etc..)한 데이터를 조회하는데에 최적화되어 있다.
 
 ## ranked의 필요성
 
