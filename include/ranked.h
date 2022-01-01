@@ -34,7 +34,14 @@ public:
 
 class RankedTable {
 public:
-  void inc(const std::string &key, int number);
+  void inc(const std::string &key, int number) {
+    if (!existsKey(key)) {
+      map[key] = number;
+    } else {
+      map[key] = map[key] + number;
+    }
+  }
+
   void incp(const std::string &key, int number, int remain);
 
   Box<int> *get(const std::string &key) const {
@@ -47,6 +54,8 @@ public:
 
 private:
   std::map<std::string, int> map;
+
+  bool existsKey(const std::string &key) { return map.find(key) != map.end(); }
 };
 
 class SortedMap {};
