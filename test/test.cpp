@@ -14,25 +14,26 @@
 
 #include "ranked.h"
 
-bool test_api_inc() {
+bool test_api_inc(ranked::RankedContext context) {
   std::string table("test-table");
   std::string key("test-key");
   int number = 1;
 
-  ranked::RankedContext::Instance->inc(table, key, number);
+  std::cout << "m1\n";
+  context.inc(table, key, number);
 
-  return **ranked::RankedContext::Instance->get(table, key) == number;
+  return *context.get(table, key) == number;
 }
 
-bool test_api_incp() {
+bool test_api_incp(ranked::RankedContext context) {
   std::string table("test-table");
   std::string key("test-key");
   int number = 1;
   int remain = 5;
 
-  ranked::RankedContext::Instance->incp(table, key, number, remain);
+  context.incp(table, key, number, remain);
 
-  return **ranked::RankedContext::Instance->get(table, key) == number;
+  return *context.get(table, key) == number;
 }
 
 void test(std::string name, bool succ) {
@@ -40,8 +41,10 @@ void test(std::string name, bool succ) {
 }
 
 int main() {
-  ranked::RankedContext::InitInstance();
+  ranked::RankedContext Instance;
 
-  test("inc", test_api_inc());
-  test("incp", test_api_incp());
+  std::cout << "ranked test\n";
+
+  test("inc", test_api_inc(Instance));
+  test("incp", test_api_incp(Instance));
 }

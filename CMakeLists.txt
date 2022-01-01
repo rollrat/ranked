@@ -23,9 +23,9 @@ set (RANKED_LIB libranked)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_subdirectory (test)
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 add_subdirectory (lib)
 add_subdirectory (util)

@@ -14,6 +14,7 @@
 #define _RANKED_
 
 #include <chrono>
+#include <iostream>
 #include <map>
 #include <queue>
 #include <string>
@@ -26,7 +27,7 @@ template <typename T> class Box {
 public:
   Box() : ptr(nullptr) {}
   Box(T value) { *ptr = value; }
-  T &&operator*() const { return *ptr; }
+  T operator*() const { return *ptr; }
 };
 
 class RankedItem {
@@ -97,10 +98,6 @@ class SortedMap {};
 
 class RankedContext {
 public:
-  static RankedContext *Instance;
-
-  static void InitInstance() { Instance = new RankedContext(); }
-
   void inc(const std::string &tableName, const std::string &key, int number) {
     auto table = getTable(tableName);
     if (table != nullptr) {
@@ -127,11 +124,12 @@ public:
 private:
   std::map<std::string, RankedTable *> tableMap;
 
-  RankedTable *getTable(const std::string &tableName) const {
+  RankedTable *getTable(const std::string &tableName) {
     auto table = tableMap.find(tableName);
     if (table != tableMap.end())
       return table->second;
-    return nullptr;
+    tableMap[tableName] = new RankedTable();
+    return tableMap[tableName];
   }
 };
 
