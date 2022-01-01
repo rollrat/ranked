@@ -82,3 +82,9 @@ flushall
 ```
 
 `flushall`은 메모리의 모든 `table`을 삭제한다.
+
+## ranked의 구현
+
+`ranked`는 `sorted set`과 `min heap`을 이용하여 구현한다.
+`ranked`는 `incp` 또는 `decp` 요청을 해석하여 `remain`을 `timestamp`로 변환하고 `min heap`에 삽입한다.
+`zrange`또는 `zrevrange`이 요청되면 `min heap`에 삽입된 항목들을 조회하고 `sorted set`를 재구성하고 `range`명령을 처리한다.
