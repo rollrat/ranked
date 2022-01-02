@@ -13,8 +13,10 @@
 #ifndef _RANKED_
 #define _RANKED_
 
+#include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <queue>
 #include <string>
@@ -60,8 +62,56 @@ public:
 
   void incp(const std::string &key, int number, int remain) {
     inc(key, number);
-    minHeap.push(
-        RankedPeriodicUnit(getTimeStamp() + remain, key, number));
+    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, number));
+  }
+
+  std::vector<std::string> zrange(int offset, int count) {
+    processPeriodic();
+
+    std::vector<std::pair<std::string, int>> array;
+    for (const auto &item : map) {
+      array.emplace_back(item);
+    }
+
+    std::sort(array.begin(), array.end(),
+              [](const auto &x, const auto &y) { return x.second > y.second; });
+
+    std::vector<std::string> result;
+
+    if (count == 0) {
+      count = std::numeric_limits<int>::max();
+    }
+
+    for (int i = offset, j = 0; i < array.size() && j < count; i++, j++) {
+      result.emplace_back(array[i].first);
+    }
+
+    return result;
+  }
+
+  std::vector<std::pair<std::string, int>> zrange_withscores(int offset,
+                                                             int count) {
+    processPeriodic();
+
+    std::vector<std::pair<std::string, int>> array;
+    for (const auto &item : map) {
+      array.emplace_back(item);
+    }
+
+    std::sort(array.begin(), array.end(),
+              [](const auto &x, const auto &y) { return x.second > y.second; });
+
+    std::vector<std::pair<std::string, int>> result;
+
+    if (count == 0) {
+      count = std::numeric_limits<int>::max();
+    }
+
+    for (int i = offset, j = 0; i < array.size() && j < count; i++, j++) {
+      result.emplace_back(array[i]);
+    }
+
+    return result;
   }
 
   Box<int> get(const std::string &key) {
@@ -115,6 +165,24 @@ public:
     if (table != nullptr) {
       table->incp(key, number, remain);
     }
+  }
+
+  std::vector<std::string> zrange(const std::string &tableName, int offset,
+                                  int count) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      return table->zrange(offset, count);
+    }
+    return std::vector<std::string>();
+  }
+
+  std::vector<std::pair<std::string, int>>
+  zrange_withscores(const std::string &tableName, int offset, int count) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      return table->zrange_withscores(offset, count);
+    }
+    return std::vector<std::pair<std::string, int>>();
   }
 
   Box<int> get(const std::string &tableName, const std::string &key) {
