@@ -80,6 +80,38 @@ bool test_api_zrange(ranked::RankedContext context) {
   return true;
 }
 
+class NullBuffer : public std::streambuf {
+public:
+  int overflow(int c) { return c; }
+};
+
+bool test_command() {
+  ranked::RankedCommandProcessor processor;
+
+  NullBuffer null_buffer;
+  std::ostream null_stream(&null_buffer);
+
+  processor.processReceivePostLine("zadd table 1 mem", null_stream);
+  processor.processReceivePostLine("zincrby table 1 mem", null_stream);
+  processor.processReceivePostLine("zincrbyp table 1 mem 4", null_stream);
+
+  for (int i = 0; i < 100000; i++) {
+    processor.processReceivePostLine("zincrbyp table 1 mem " +
+                                         std::to_string((i % 2 == 0) ? 1 : 7),
+                                     null_stream);
+  }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+
+  ofw::ChronoTimer ct;
+  ct.start();
+  processor.processReceivePostLine("zget table mem", std::cout);
+  ct.finish();
+  std::cout << "Time: " << *ct << '\n';
+
+  return true;
+}
+
 void test(std::string name, bool succ) {
   std::cout << name << ": "
             << (succ ? "\x1B[32msuccess\033[0m" : "\x1B[31mfail\033[0m")
@@ -87,11 +119,12 @@ void test(std::string name, bool succ) {
 }
 
 int main() {
-  ranked::RankedContext Instance;
+  // ranked::RankedContext Instance;
 
   std::cout << "ranked test\n";
 
   // test("inc", test_api_inc(Instance));
   // test("incp", test_api_incp(Instance));
-  test("inc-bulk", test_api_zrange(Instance));
+  // test("inc-bulk", test_api_zrange(Instance));
+  test("command", test_command());
 }

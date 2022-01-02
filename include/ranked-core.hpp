@@ -26,13 +26,15 @@
 namespace ranked {
 
 template <typename T> class Box {
-  T *ptr;
+  T value;
+  bool isnull;
 
 public:
-  Box() : ptr(nullptr) {}
-  Box(T value) { *ptr = value; }
-  T operator*() const { return *ptr; }
-};
+  Box() : isnull(true) {}
+  Box(T value) : isnull(false), value(value) {}
+  bool isNull() const { return isnull; }
+  T operator*() const { return value; }
+}; // namespace ranked
 
 class RankedPeriodicUnit {
 public:
@@ -43,8 +45,8 @@ public:
   RankedPeriodicUnit(int64_t expireTime, std::string member, int increment)
       : expireTime(expireTime), member(member), increment(increment) {}
 
-  bool operator<(const RankedPeriodicUnit &other) const {
-    return expireTime < other.expireTime;
+  bool operator>(const RankedPeriodicUnit &other) const {
+    return expireTime > other.expireTime;
   }
 };
 
@@ -53,14 +55,16 @@ public:
   ~RankedTable() {
     map.clear();
     set.clear();
-    std::priority_queue<
-        std::shared_ptr<RankedPeriodicUnit>,
-        std::vector<std::shared_ptr<RankedPeriodicUnit>>, compare>()
+    std::priority_queue<std::shared_ptr<RankedPeriodicUnit>,
+                        std::vector<std::shared_ptr<RankedPeriodicUnit>>,
+                        compare>()
         .swap(minHeap);
   }
 
   void zadd(int increment, const std::string &member) {
-    set_erase(member);
+    if (existsmember(member)) {
+      set_erase(member);
+    }
     map[member] = increment;
     set_insert(member);
   }
@@ -68,18 +72,15 @@ public:
   Box<int> zincrby(int increment, const std::string &member) {
     if (!existsmember(member)) {
       map[member] = 0;
-    } else {
-      set_erase(member);
     }
     int result = map[member] = map[member] + increment;
     set_insert(member);
     return result;
   }
-  Box<int> zincrbyp(int increment, const std::string &member, int remain) {
-    int result = *zincrby(increment, member);
-    minHeap.push(std::make_shared<RankedPeriodicUnit>(getTimeStamp() + remain,
-                                                      member, -increment));
-    return result;
+  Box<int> zincrbyp(int increment, const std::string &member, int expire) {
+    minHeap.push(std::make_shared<RankedPeriodicUnit>(getTimeStamp() + expire,
+                                                      member, increment));
+    return zincrby(increment, member);
   }
 
   std::vector<std::string> zrange(int offset, int count) {
@@ -182,7 +183,7 @@ private:
   struct compare {
     bool operator()(const std::shared_ptr<RankedPeriodicUnit> &wp1,
                     const std::shared_ptr<RankedPeriodicUnit> &wp2) const {
-      return *wp1 < *wp2;
+      return *wp1 > *wp2;
     }
   };
 
@@ -203,7 +204,10 @@ private:
   void processPeriodic() {
     auto now = getTimeStamp();
 
-    while (!minHeap.empty() && minHeap.top()->expireTime < now) {
+    std::cout << now << '\n';
+    std::cout << minHeap.top()->expireTime << '\n';
+
+    while (!minHeap.empty() && minHeap.top()->expireTime <= now) {
       set_erase(minHeap.top()->member);
       map[minHeap.top()->member] -= minHeap.top()->increment;
       set_insert(minHeap.top()->member);
@@ -235,8 +239,8 @@ public:
     return getTable(tableName)->zincrby(increment, member);
   }
   Box<int> zincrbyp(const std::string &tableName, int increment,
-                    const std::string &member, int remain) {
-    return getTable(tableName)->zincrbyp(increment, member, remain);
+                    const std::string &member, int expire) {
+    return getTable(tableName)->zincrbyp(increment, member, expire);
   }
 
   std::vector<std::string> zrange(const std::string &tableName, int offset,

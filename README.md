@@ -7,7 +7,7 @@ ranked는 redis의 sorted map와 같은 기능을 제공하며, periodic(daily, 
 기존 `redis`를 사용하는 경우 `expired zadd`나 `expired zincrby`를 구현하기 위해선 `redis`의 `setex`와 `psubscribe __keyevent::expired`를 이용하여 구현하거나, 서버의 자체 타이머(cron) 등을 이용하여 구현해야 했다.
 이는 `stateless`하게 서버를 구현할 수 없는 요인이 되었으며, `expired`를 위한 부가적인 연산이 추가로 소요되었다.
 `ranked`는 이러한 문제를 모두 `stateful` 노드에서 처리하게 함으로써 서버의 독립성을 높이는 프로젝트다.
-`ranked`는 `redis`의 `zadd`, `zsub`, `zinc`, `zdec`, `zrange`, `zrevrange` `flushall`만을 `slim`하게 제공하며, 추가로 `ranked`의 핵심 함수인 `zaddp`와 `zsubp`, `zincp`, `zsubp`를 제공한다.
+`ranked`는 `redis`의 `zadd`, `zsub`, `zinc`, `zdec`, `zrange`, `zrevrange` `flushall`만을 `slim`하게 제공하며, 추가로 `ranked`의 핵심 함수인 `zincrbyp`를 제공한다.
 `redis`가 제공하는 다른 연산들은 지원하지 않는다.
 
 ## ranked의 한계

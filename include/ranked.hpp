@@ -14,5 +14,6 @@
 #define _RANKED_
 
 #include "ranked-core.hpp"
+#include "ranked-server.hpp"
 
 #endif
