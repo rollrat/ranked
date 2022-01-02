@@ -19,6 +19,7 @@
 #include <limits>
 #include <map>
 #include <queue>
+#include <set>
 #include <string>
 
 namespace ranked {
@@ -56,8 +57,10 @@ public:
     if (!existsKey(key)) {
       map[key] = number;
     } else {
+      set.erase(set.find({map[key], key}));
       map[key] = map[key] + number;
     }
+    set.insert({map[key], key});
   }
 
   void incp(const std::string &key, int number, int remain) {
@@ -68,23 +71,19 @@ public:
   std::vector<std::string> zrange(int offset, int count) {
     processPeriodic();
 
-    std::vector<std::pair<std::string, int>> array;
-    for (const auto &item : map) {
-      array.emplace_back(item);
-    }
-
-    std::sort(array.begin(), array.end(),
-              [](const auto &x, const auto &y) { return x.second > y.second; });
-
     std::vector<std::string> result;
+
+    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+
+    for (; offset--;)
+      iter++;
 
     if (count == 0) {
       count = std::numeric_limits<int>::max();
     }
 
-    for (int i = offset, j = 0; i < array.size() && j < count; i++, j++) {
-      result.emplace_back(array[i].first);
-    }
+    for (; iter != set.end() && count > 0; iter++)
+      result.emplace_back(iter->second);
 
     return result;
   }
@@ -93,23 +92,19 @@ public:
                                                              int count) {
     processPeriodic();
 
-    std::vector<std::pair<std::string, int>> array;
-    for (const auto &item : map) {
-      array.emplace_back(item);
-    }
-
-    std::sort(array.begin(), array.end(),
-              [](const auto &x, const auto &y) { return x.second > y.second; });
-
     std::vector<std::pair<std::string, int>> result;
+
+    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+
+    for (; offset--;)
+      iter++;
 
     if (count == 0) {
       count = std::numeric_limits<int>::max();
     }
 
-    for (int i = offset, j = 0; i < array.size() && j < count; i++, j++) {
-      result.emplace_back(array[i]);
-    }
+    for (; iter != set.end() && count > 0; iter++)
+      result.push_back({iter->second, iter->first});
 
     return result;
   }
@@ -126,6 +121,7 @@ public:
 
 private:
   std::map<std::string, int> map;
+  std::set<std::pair<int, std::string>> set;
   std::priority_queue<RankedPeriodicUnit> minHeap;
 
   int64_t getTimeStamp() {
@@ -140,8 +136,10 @@ private:
     auto now = getTimeStamp();
 
     while (!minHeap.empty() && minHeap.top().expireTime < now) {
+      set.erase(set.find({map[minHeap.top().key], minHeap.top().key}));
       map[minHeap.top().key] -= minHeap.top().number;
       minHeap.pop();
+      set.insert({map[minHeap.top().key], minHeap.top().key});
     }
   }
 
