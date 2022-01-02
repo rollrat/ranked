@@ -62,23 +62,56 @@ public:
     zadd(key, number);
     minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, -number));
   }
-  void zinc(const std::string &key) { zadd(key, 1); }
-  void zincp(const std::string &key, int remain) {
-    zadd(key, 1);
-    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, 1));
-  }
 
   void zsub(const std::string &key, int number) { zadd(key, -number); }
   void zsubp(const std::string &key, int number, int remain) {
     zsubp(key, -number, remain);
   }
-  void zdec(const std::string &key) { zadd(key, -1); }
-  void zdecp(const std::string &key, int remain) {
-    zadd(key, -1);
-    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, -1));
-  }
 
   std::vector<std::string> zrange(int offset, int count) {
+    processPeriodic();
+
+    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+
+    for (; offset--;)
+      iter++;
+
+    if (count == 0) {
+      count = map.size();
+    }
+
+    std::vector<std::string> result;
+    result.reserve(count);
+
+    for (; iter != set.end() && count; iter++, count--)
+      result.emplace_back(iter->second);
+
+    return result;
+  }
+
+  std::vector<std::pair<std::string, int>> zrange_withscores(int offset,
+                                                             int count) {
+    processPeriodic();
+
+    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+
+    for (; offset--;)
+      iter++;
+
+    if (count == 0) {
+      count = map.size();
+    }
+
+    std::vector<std::pair<std::string, int>> result;
+    result.reserve(count);
+
+    for (; iter != set.end() && count; iter++, count--)
+      result.push_back({iter->second, iter->first});
+
+    return result;
+  }
+
+  std::vector<std::string> zrevrange(int offset, int count) {
     processPeriodic();
 
     std::set<std::pair<int, std::string>>::reverse_iterator iter = set.rbegin();
@@ -99,8 +132,8 @@ public:
     return result;
   }
 
-  std::vector<std::pair<std::string, int>> zrange_withscores(int offset,
-                                                             int count) {
+  std::vector<std::pair<std::string, int>> zrevrange_withscores(int offset,
+                                                                int count) {
     processPeriodic();
 
     std::set<std::pair<int, std::string>>::reverse_iterator iter = set.rbegin();
@@ -180,20 +213,6 @@ public:
     }
   }
 
-  void zinc(const std::string &tableName, const std::string &key) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zinc(key);
-    }
-  }
-
-  void zincp(const std::string &tableName, const std::string &key, int remain) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zincp(key, remain);
-    }
-  }
-
   void zsub(const std::string &tableName, const std::string &key, int number) {
     auto table = getTable(tableName);
     if (table != nullptr) {
@@ -206,20 +225,6 @@ public:
     auto table = getTable(tableName);
     if (table != nullptr) {
       table->zsubp(key, number, remain);
-    }
-  }
-
-  void zdec(const std::string &tableName, const std::string &key) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zdec(key);
-    }
-  }
-
-  void zdecp(const std::string &tableName, const std::string &key, int remain) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zdecp(key, remain);
     }
   }
 
@@ -237,6 +242,24 @@ public:
     auto table = getTable(tableName);
     if (table != nullptr) {
       return table->zrange_withscores(offset, count);
+    }
+    return std::vector<std::pair<std::string, int>>();
+  }
+
+  std::vector<std::string> zrevrange(const std::string &tableName, int offset,
+                                  int count) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      return table->zrevrange(offset, count);
+    }
+    return std::vector<std::string>();
+  }
+
+  std::vector<std::pair<std::string, int>>
+  zrevrange_withscores(const std::string &tableName, int offset, int count) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      return table->zrevrange_withscores(offset, count);
     }
     return std::vector<std::pair<std::string, int>>();
   }
