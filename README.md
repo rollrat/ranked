@@ -26,6 +26,23 @@ ranked는 redis의 sorted map와 같은 기능을 제공하며, periodic(daily, 
 보통 당일에 올라온 글들이 실시간으로 높은 조회수를 가지게될 확률이 높지만, 다른 요인으로 인해 오래전 게시글이 많이 조회되는 경우도 있다.
 당일에 올라온 글들만 실시간 게시글 랭킹을 허용한다면 다른 방법으로도 문제없겠지만, 모든 글들을 대상으로 실시간 랭킹 서비스를 구성한다면 `ranked` 사용을 고려해볼만 할 것이다.
 
+## 빌드 방법
+
+```
+git clone https://github.com/rollrat/ranked
+cd ranked
+mkdir build
+cd build
+cmake ../ -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+```
+
+서버 실행
+
+```
+./bin/ranked 0.0.0.0 6372
+```
+
 ## api
 
 ### zadd

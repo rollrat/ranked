@@ -16,6 +16,7 @@
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
+    std::cout << "ranked v1.0.0\n";
     std::cout << argv[0] << " <host> <port>";
     return 0;
   }
