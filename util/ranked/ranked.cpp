@@ -12,4 +12,14 @@
 
 #include <iostream>
 
-int main(int argc, char *argv[]) { std::cout << "hello"; }
+#include "ranked.hpp"
+
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    std::cout << argv[0] << " <host> <port>";
+    return 0;
+  }
+
+  ranked::RankedServer server;
+  server.startServer(argv[1], std::atoi(argv[2]));
+}

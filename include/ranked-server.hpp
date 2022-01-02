@@ -236,7 +236,7 @@ private:
 
     processor.processReceivePost(input, output);
 
-    res.set_content("", "text/plain");
+    res.set_content(output.str().c_str(), "text/plain");
   }
 };
 
