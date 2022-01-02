@@ -53,19 +53,33 @@ public:
 
 class RankedTable {
 public:
-  void inc(const std::string &key, int number) {
+  void zadd(const std::string &key, int number) {
     if (!existsKey(key)) {
       map[key] = number;
     } else {
-      set.erase(set.find({map[key], key}));
+      set_erase(key);
       map[key] = map[key] + number;
     }
-    set.insert({map[key], key});
+    set_insert(key);
+  }
+  void zaddp(const std::string &key, int number, int remain) {
+    zadd(key, number);
+    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, -number));
+  }
+  void zinc(const std::string &key) { zadd(key, 1); }
+  void zincp(const std::string &key, int remain) {
+    zadd(key, 1);
+    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, 1));
   }
 
-  void incp(const std::string &key, int number, int remain) {
-    inc(key, number);
-    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, number));
+  void zsub(const std::string &key, int number) { zadd(key, -number); }
+  void zsubp(const std::string &key, int number, int remain) {
+    zsubp(key, -number, remain);
+  }
+  void zdec(const std::string &key) { zadd(key, -1); }
+  void zdecp(const std::string &key, int remain) {
+    zadd(key, -1);
+    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, -1));
   }
 
   std::vector<std::string> zrange(int offset, int count) {
@@ -138,32 +152,78 @@ private:
     auto now = getTimeStamp();
 
     while (!minHeap.empty() && minHeap.top().expireTime < now) {
-      set.erase(set.find({map[minHeap.top().key], minHeap.top().key}));
+      set_erase(minHeap.top().key);
       map[minHeap.top().key] -= minHeap.top().number;
+      set_insert(minHeap.top().key);
       minHeap.pop();
-      set.insert({map[minHeap.top().key], minHeap.top().key});
     }
   }
+
+  void set_erase(const std::string &key) {
+    set.erase(set.find({map[key], key}));
+  }
+  void set_insert(const std::string &key) { set.insert({map[key], key}); }
 
   bool existsKey(const std::string &key) { return map.find(key) != map.end(); }
 };
 
-class SortedMap {};
-
 class RankedContext {
 public:
-  void inc(const std::string &tableName, const std::string &key, int number) {
+  void zadd(const std::string &tableName, const std::string &key, int number) {
     auto table = getTable(tableName);
     if (table != nullptr) {
-      table->inc(key, number);
+      table->zadd(key, number);
     }
   }
 
-  void incp(const std::string &tableName, const std::string &key, int number,
-            int remain) {
+  void zaddp(const std::string &tableName, const std::string &key, int number,
+             int remain) {
     auto table = getTable(tableName);
     if (table != nullptr) {
-      table->incp(key, number, remain);
+      table->zaddp(key, number, remain);
+    }
+  }
+
+  void zinc(const std::string &tableName, const std::string &key) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zinc(key);
+    }
+  }
+
+  void zincp(const std::string &tableName, const std::string &key, int remain) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zincp(key, remain);
+    }
+  }
+
+  void zsub(const std::string &tableName, const std::string &key, int number) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zsub(key, number);
+    }
+  }
+
+  void zsubp(const std::string &tableName, const std::string &key, int number,
+             int remain) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zsubp(key, number, remain);
+    }
+  }
+
+  void zdec(const std::string &tableName, const std::string &key) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zdec(key);
+    }
+  }
+
+  void zdecp(const std::string &tableName, const std::string &key, int remain) {
+    auto table = getTable(tableName);
+    if (table != nullptr) {
+      table->zdecp(key, remain);
     }
   }
 
