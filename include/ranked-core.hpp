@@ -18,6 +18,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <string>
@@ -36,11 +37,11 @@ public:
 class RankedPeriodicUnit {
 public:
   int64_t expireTime;
-  std::string key;
-  int number;
+  std::string member;
+  int increment;
 
-  RankedPeriodicUnit(int64_t expireTime, std::string key, int number)
-      : expireTime(expireTime), key(key), number(number) {}
+  RankedPeriodicUnit(int64_t expireTime, std::string member, int increment)
+      : expireTime(expireTime), member(member), increment(increment) {}
 
   bool operator<(const RankedPeriodicUnit &other) const {
     return expireTime < other.expireTime;
@@ -49,23 +50,36 @@ public:
 
 class RankedTable {
 public:
-  void zadd(const std::string &key, int number) {
-    if (!existsKey(key)) {
-      map[key] = number;
-    } else {
-      set_erase(key);
-      map[key] = map[key] + number;
-    }
-    set_insert(key);
-  }
-  void zaddp(const std::string &key, int number, int remain) {
-    zadd(key, number);
-    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, -number));
+  ~RankedTable() {
+    map.clear();
+    set.clear();
+    std::priority_queue<
+        std::shared_ptr<RankedPeriodicUnit>,
+        std::vector<std::shared_ptr<RankedPeriodicUnit>>, compare>()
+        .swap(minHeap);
   }
 
-  void zsub(const std::string &key, int number) { zadd(key, -number); }
-  void zsubp(const std::string &key, int number, int remain) {
-    zsubp(key, -number, remain);
+  void zadd(int increment, const std::string &member) {
+    set_erase(member);
+    map[member] = increment;
+    set_insert(member);
+  }
+
+  Box<int> zincrby(int increment, const std::string &member) {
+    if (!existsmember(member)) {
+      map[member] = 0;
+    } else {
+      set_erase(member);
+    }
+    int result = map[member] = map[member] + increment;
+    set_insert(member);
+    return result;
+  }
+  Box<int> zincrbyp(int increment, const std::string &member, int remain) {
+    int result = *zincrby(increment, member);
+    minHeap.push(std::make_shared<RankedPeriodicUnit>(getTimeStamp() + remain,
+                                                      member, -increment));
+    return result;
   }
 
   std::vector<std::string> zrange(int offset, int count) {
@@ -76,7 +90,7 @@ public:
     for (; offset--;)
       iter++;
 
-    if (count == 0) {
+    if (count == -1) {
       count = map.size();
     }
 
@@ -98,7 +112,7 @@ public:
     for (; offset--;)
       iter++;
 
-    if (count == 0) {
+    if (count == -1) {
       count = map.size();
     }
 
@@ -154,10 +168,10 @@ public:
     return result;
   }
 
-  Box<int> get(const std::string &key) {
+  Box<int> zget(const std::string &member) {
     processPeriodic();
 
-    auto kv = map.find(key);
+    auto kv = map.find(member);
     if (kv != map.end()) {
       return Box<int>(kv->second);
     }
@@ -165,9 +179,18 @@ public:
   }
 
 private:
+  struct compare {
+    bool operator()(const std::shared_ptr<RankedPeriodicUnit> &wp1,
+                    const std::shared_ptr<RankedPeriodicUnit> &wp2) const {
+      return *wp1 < *wp2;
+    }
+  };
+
   std::map<std::string, int> map;
   std::set<std::pair<int, std::string>> set;
-  std::priority_queue<RankedPeriodicUnit> minHeap;
+  std::priority_queue<std::shared_ptr<RankedPeriodicUnit>,
+                      std::vector<std::shared_ptr<RankedPeriodicUnit>>, compare>
+      minHeap;
 
   int64_t getTimeStamp() {
     const auto p1 = std::chrono::system_clock::now();
@@ -180,52 +203,40 @@ private:
   void processPeriodic() {
     auto now = getTimeStamp();
 
-    while (!minHeap.empty() && minHeap.top().expireTime < now) {
-      set_erase(minHeap.top().key);
-      map[minHeap.top().key] -= minHeap.top().number;
-      set_insert(minHeap.top().key);
+    while (!minHeap.empty() && minHeap.top()->expireTime < now) {
+      set_erase(minHeap.top()->member);
+      map[minHeap.top()->member] -= minHeap.top()->increment;
+      set_insert(minHeap.top()->member);
       minHeap.pop();
     }
   }
 
-  void set_erase(const std::string &key) {
-    set.erase(set.find({map[key], key}));
+  void set_erase(const std::string &member) {
+    set.erase(set.find({map[member], member}));
   }
-  void set_insert(const std::string &key) { set.insert({map[key], key}); }
+  void set_insert(const std::string &member) {
+    set.insert({map[member], member});
+  }
 
-  bool existsKey(const std::string &key) { return map.find(key) != map.end(); }
+  bool existsmember(const std::string &member) {
+    return map.find(member) != map.end();
+  }
 };
 
 class RankedContext {
 public:
-  void zadd(const std::string &tableName, const std::string &key, int number) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zadd(key, number);
-    }
+  void zadd(const std::string &tableName, int value,
+            const std::string &member) {
+    getTable(tableName)->zadd(value, member);
   }
 
-  void zaddp(const std::string &tableName, const std::string &key, int number,
-             int remain) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zaddp(key, number, remain);
-    }
+  Box<int> zincrby(const std::string &tableName, int increment,
+                   const std::string &member) {
+    return getTable(tableName)->zincrby(increment, member);
   }
-
-  void zsub(const std::string &tableName, const std::string &key, int number) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zsub(key, number);
-    }
-  }
-
-  void zsubp(const std::string &tableName, const std::string &key, int number,
-             int remain) {
-    auto table = getTable(tableName);
-    if (table != nullptr) {
-      table->zsubp(key, number, remain);
-    }
+  Box<int> zincrbyp(const std::string &tableName, int increment,
+                    const std::string &member, int remain) {
+    return getTable(tableName)->zincrbyp(increment, member, remain);
   }
 
   std::vector<std::string> zrange(const std::string &tableName, int offset,
@@ -247,7 +258,7 @@ public:
   }
 
   std::vector<std::string> zrevrange(const std::string &tableName, int offset,
-                                  int count) {
+                                     int count) {
     auto table = getTable(tableName);
     if (table != nullptr) {
       return table->zrevrange(offset, count);
@@ -264,22 +275,24 @@ public:
     return std::vector<std::pair<std::string, int>>();
   }
 
-  Box<int> get(const std::string &tableName, const std::string &key) {
+  Box<int> zget(const std::string &tableName, const std::string &member) {
     auto table = getTable(tableName);
     if (table != nullptr) {
-      return table->get(key);
+      return table->zget(member);
     }
     return Box<int>();
   }
 
-private:
-  std::map<std::string, RankedTable *> tableMap;
+  void flushall() { tableMap.clear(); }
 
-  RankedTable *getTable(const std::string &tableName) {
+private:
+  std::map<std::string, std::shared_ptr<RankedTable>> tableMap;
+
+  std::shared_ptr<RankedTable> getTable(const std::string &tableName) {
     auto table = tableMap.find(tableName);
     if (table != tableMap.end())
       return table->second;
-    tableMap[tableName] = new RankedTable();
+    tableMap[tableName] = std::make_shared<RankedTable>();
     return tableMap[tableName];
   }
 };

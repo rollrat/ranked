@@ -31,66 +31,30 @@ ranked는 redis의 sorted map와 같은 기능을 제공하며, periodic(daily, 
 ### zadd
 
 ```
-zadd <table> <key> <number>
+zadd <table> [<value> <member>]+
 ```
 
-`zadd`는 `table`에 있는 `key`의 `value`를 `number`만큼 증가시킨다.
+`zadd`는 `table`에 있는 `member`를 `value`로 설정시킨다.
+`value`는 정수만 가능하다.
+`member` 값이 없는 경우 해당 값을 `value`로 설정시킨다.
 
-### zaddp
-
-```
-zaddp <table> <key> <number> <remain>
-```
-
-`zaddp`는 `table`에 있는 `key`의 `value`를 `number`만큼 증가시키고, `remain`초가 지나면 `key`의 `value`를 `number`만큼 감소시킨다.
-
-### zinc
+### zincrby
 
 ```
-zinc <table> <key>
+zincrby <table> [<increment> <member>]+
 ```
 
-`zinc`는 `table`에 있는 `key`의 `value`를 `1`만큼 증가시킨다.
+`zincrby`는 `table`에 있는 `member`의 `value`를 `increment`만큼 증가시킨다.
+`member` 값이 없는 경우 해당 값을 `0`으로 설정하고 `increment`만큼 증가시킨다.
 
-### zincp
-
-```
-zincp <table> <key> <remain>
-```
-
-`zincp`는 `table`에 있는 `key`의 `value`를 `1`만큼 증가시키고, `remain`초가 지나면 `key`의 `value`를 `1`만큼 감소시킨다.
-
-### zsub
+### zincrbyp (expired zincrby)
 
 ```
-zsub <table> <key> <number>
+zincrbyp <table> [<increment> <member>]+ <expire>
 ```
 
-`zsub`는 `table`에 있는 `key`의 `value`를 `number`만큼 증가시킨다.
-
-### zsubp
-
-```
-zsubp <table> <key> <number> <remain>
-```
-
-`zsubp`는 `table`에 있는 `key`의 `value`를 `number`만큼 증가시킨고, `remain`초가 지나면 `key`의 `value`를 `number`만큼 증가시킨다.
-
-### zdec
-
-```
-zdec <table> <key>
-```
-
-`zdec`는 `table`에 있는 `key`의 `value`를 `1`만큼 감소시킨다.
-
-### zdecp
-
-```
-zdecp <table> <key> <remain>
-```
-
-`zdecp`는 `table`에 있는 `key`의 `value`를 `1`만큼 감소시키고, `remain`초가 지나면 `key`의 `value`를 `1`만큼 증가시킨다.
+`zincrbyp`는 `table`에 있는 `member`의 `value`를 `increment`만큼 증가시키고, 
+`expire`초가 지나면 `member`의 `value`를 `increment`만큼 감소시킨다.
 
 ### zrange
 
@@ -98,7 +62,8 @@ zdecp <table> <key> <remain>
 zrange <table> <offset> <count> [withscores]
 ```
 
-`zrange`는 `<table>`에 있는 `key-value` 중 `value`가 작은 순으로 `key`들의 리스트를 가져오되, `offset`개 만큼 리스트의 앞 부분이 생략되고, `count`개 만큼의 리스트 크기만을 가져온다.
+`zrange`는 `<table>`에 있는 `key-value` 중 `value`가 작은 순으로 `key`들의 리스트를 가져오되, 
+`offset`개 만큼 리스트의 앞 부분이 생략되고, `count`개 만큼의 리스트 크기만을 가져온다.
 `withscores`는 `key-value`의 리스트를 가져온다.
 
 ### zrevrange
@@ -107,7 +72,8 @@ zrange <table> <offset> <count> [withscores]
 zrevrange <table> <offset> <count> [withscores]
 ```
 
-`zrange`는 `<table>`에 있는 `key-value` 중 `value`가 큰 순으로 `key`들의 리스트를 가져오되, `offset`개 만큼 리스트의 앞 부분이 생략되고, `count`개 만큼의 리스트 크기만을 가져온다.
+`zrange`는 `<table>`에 있는 `key-value` 중 `value`가 큰 순으로 `key`들의 리스트를 가져오되, 
+`offset`개 만큼 리스트의 앞 부분이 생략되고, `count`개 만큼의 리스트 크기만을 가져온다.
 `withscores`는 `key-value`의 리스트를 가져온다.
 
 ### flushall

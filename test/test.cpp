@@ -21,9 +21,9 @@ bool test_api_inc(ranked::RankedContext context) {
   std::string key("test-key-inc");
   int number = 1;
 
-  context.zadd(table, key, number);
+  context.zincrby(table, number, key);
 
-  return *context.get(table, key) == number;
+  return *context.zget(table, key) == number;
 }
 
 bool test_api_incp(ranked::RankedContext context) {
@@ -32,11 +32,11 @@ bool test_api_incp(ranked::RankedContext context) {
   int number = 1;
   int remain = 1;
 
-  context.zaddp(table, key, number, remain);
+  context.zincrbyp(table, number, key, remain);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-  return *context.get(table, key) == 0;
+  return *context.zget(table, key) == 0;
 }
 
 bool test_api_incp_bulk(ranked::RankedContext context) {
@@ -47,12 +47,12 @@ bool test_api_incp_bulk(ranked::RankedContext context) {
   const int count = 1000000;
 
   for (int i = 0; i < count; i++) {
-    context.zaddp(table, key, number, remain);
+    context.zincrbyp(table, number, key, remain);
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
-  return *context.get(table, key) == 0;
+  return *context.zget(table, key) == 0;
 }
 
 bool test_api_zrange(ranked::RankedContext context) {
@@ -61,7 +61,7 @@ bool test_api_zrange(ranked::RankedContext context) {
   const int count = 1000000;
 
   for (int i = 0; i < count; i++) {
-    context.zadd(table, key_prefix + std::to_string(i % 100000), i % 10);
+    context.zincrby(table, i % 10, key_prefix + std::to_string(i % 100000));
   }
 
   for (int i = 0; i < 100; i++) {
