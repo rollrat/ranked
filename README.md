@@ -85,6 +85,27 @@ flushall
 
 ## ranked의 구현
 
-`ranked`는 `sorted set`과 `min heap`을 이용하여 구현한다.
+`ranked`는 `sorted map`과 `min heap`을 이용하여 구현한다.
 `ranked`는 `incp` 또는 `decp` 요청을 해석하여 `remain`을 `timestamp`로 변환하고 `min heap`에 삽입한다.
-`zrange`또는 `zrevrange`이 요청되면 `min heap`에 삽입된 항목들을 조회하고 `sorted set`를 재구성하고 `range`명령을 처리한다.
+`zrange`또는 `zrevrange`이 요청되면 `min heap`에 삽입된 항목들을 조회하고 `sorted map`를 재구성하고 `range`명령을 처리한다.
+
+### range 연산의 구현
+
+`sorted map`을 통하여 `range`연산을 구현하기 위해선, `sorted map`의 모든 원소를 `value`의 오름차순 또는 내림차순으로 정렬하고,
+요구되는 `offset`과 `count`에 따라 결과를 리턴해야한다.
+`sorted map`을 정렬하는데 `O(log n)`의 시간이 걸리므로, 한 번의 `range` 요청당 `log n`의 시간이 소요됨을 기대할 수 있다.
+다만, `sorted map`을 정렬하기 위해선 전체를 복제해야하는데, 복제하는데 걸리는 시간이 병목이 될 것이다.
+따라서 기존 `key`에 대한 정렬만 지원되는 `sorted map`을 확장하여 `key`와 `value` 모두의 정렬을 지원하는 `double sorted map`을 만든다.
+`double sorted map`은 `key`에 대한 `btree`와 `value`에 대한 `btree`로 구현한다.
+서로 상호 접근이 가능하게 포인터로 연결한다.
+
+#### array 를 통한 구현
+
+`double sorted map`을 기존 `std::map`을 통해서 구현하려면, `std::map`와 `sorted array`를 사용한다.
+`sorted array`는 항상 정렬된 상태를 유지하는 `array`의 확장형이다.
+`double sorted map`에 요소를 삽입한다면,
+
+#### priority queue를 통한 구현
+
+`heap`은 `up heap`과 `down heap`과정이 포함된다.
+이 과정을 이용하면 `sorted map`과 `priority queue`를 이용하여 
