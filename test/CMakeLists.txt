@@ -4,5 +4,5 @@ set(SOURCES
     )
 
 add_executable(rankedtest ${SOURCES})
-target_link_libraries(rankedtest ${ROLLRAT_LIBRARY})
+target_link_libraries(rankedtest)
 add_test(ranked_test rankedtest)

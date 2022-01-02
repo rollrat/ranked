@@ -3,4 +3,4 @@ add_executable (
     ranked.cpp
     ${INCLUDE_DIRECTORIES}
     )
-target_link_libraries(ranked ${RANKED_LIB})
+target_link_libraries(ranked)

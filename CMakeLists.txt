@@ -18,20 +18,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${PROJECT_BINARY_DIR}/bin)
 
-set (RANKED_LIB libranked)
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
-#if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_subdirectory (test)
-#endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-add_subdirectory (lib)
+add_subdirectory (test)
 add_subdirectory (util)
-
-install(
-    DIRECTORY lib/ 
-    DESTINATION include/ 
-    FILES_MATCHING PATTERN "*.h"
-    )
