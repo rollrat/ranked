@@ -33,10 +33,6 @@ public:
   T operator*() const { return *ptr; }
 };
 
-class RankedItem {
-public:
-};
-
 class RankedPeriodicUnit {
 public:
   int64_t expireTime;

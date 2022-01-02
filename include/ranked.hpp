@@ -13,6 +13,6 @@
 #ifndef _RANKED_
 #define _RANKED_
 
-#include "ranked-core.h"
+#include "ranked-core.hpp"
 
 #endif

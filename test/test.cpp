@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "ChronoTimer.hpp"
-#include "ranked.h"
+#include "ranked.hpp"
 
 bool test_api_inc(ranked::RankedContext context) {
   std::string table("test-table");
