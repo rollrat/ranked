@@ -20,7 +20,6 @@ bool test_api_inc(ranked::RankedContext context) {
   std::string key("test-key-inc");
   int number = 1;
 
-  std::cout << "m1\n";
   context.inc(table, key, number);
 
   return *context.get(table, key) == number;
@@ -40,7 +39,9 @@ bool test_api_incp(ranked::RankedContext context) {
 }
 
 void test(std::string name, bool succ) {
-  std::cout << name << ": " << (succ ? "success" : "fail") << '\n';
+  std::cout << name << ": "
+            << (succ ? "\x1B[32msuccess\033[0m" : "\x1B[31mfail\033[0m")
+            << '\n';
 }
 
 int main() {
