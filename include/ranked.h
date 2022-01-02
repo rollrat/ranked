@@ -38,10 +38,10 @@ class RankedPeriodicUnit {
 public:
   int64_t expireTime;
   std::string key;
-  int remain;
+  int number;
 
-  RankedPeriodicUnit(int64_t expireTime, std::string key, int remain)
-      : expireTime(expireTime), key(key), remain(remain) {}
+  RankedPeriodicUnit(int64_t expireTime, std::string key, int number)
+      : expireTime(expireTime), key(key), number(number) {}
 
   bool operator<(const RankedPeriodicUnit &other) const {
     return expireTime < other.expireTime;
@@ -60,7 +60,8 @@ public:
 
   void incp(const std::string &key, int number, int remain) {
     inc(key, number);
-    minHeap.push(RankedPeriodicUnit(getTimeStamp() + remain, key, number));
+    minHeap.push(
+        RankedPeriodicUnit(getTimeStamp() + remain, key, number));
   }
 
   Box<int> get(const std::string &key) {
@@ -87,8 +88,11 @@ private:
 
   void processPeriodic() {
     auto now = getTimeStamp();
-    while (!minHeap.empty() && minHeap.top().expireTime < now)
+
+    while (!minHeap.empty() && minHeap.top().expireTime < now) {
+      map[minHeap.top().key] -= minHeap.top().number;
       minHeap.pop();
+    }
   }
 
   bool existsKey(const std::string &key) { return map.find(key) != map.end(); }

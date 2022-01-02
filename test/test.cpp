@@ -11,12 +11,13 @@
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
+#include <thread>
 
 #include "ranked.h"
 
 bool test_api_inc(ranked::RankedContext context) {
   std::string table("test-table");
-  std::string key("test-key");
+  std::string key("test-key-inc");
   int number = 1;
 
   std::cout << "m1\n";
@@ -27,13 +28,15 @@ bool test_api_inc(ranked::RankedContext context) {
 
 bool test_api_incp(ranked::RankedContext context) {
   std::string table("test-table");
-  std::string key("test-key");
+  std::string key("test-key-incp");
   int number = 1;
-  int remain = 5;
+  int remain = 1;
 
   context.incp(table, key, number, remain);
 
-  return *context.get(table, key) == number;
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+  return *context.get(table, key) == 0;
 }
 
 void test(std::string name, bool succ) {
