@@ -67,7 +67,7 @@ bool test_api_zrange(ranked::RankedContext context) {
   for (int i = 0; i < 100; i++) {
     ofw::ChronoTimer ct;
     ct.start();
-    auto result = context.zrange(table, 0, 0);
+    auto result = context.zrange_withscores(table, 0, 0);
     ct.finish();
 
     // for (auto v : result) {

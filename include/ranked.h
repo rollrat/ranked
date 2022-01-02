@@ -71,18 +71,19 @@ public:
   std::vector<std::string> zrange(int offset, int count) {
     processPeriodic();
 
-    std::vector<std::string> result;
-
-    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+    std::set<std::pair<int, std::string>>::reverse_iterator iter = set.rbegin();
 
     for (; offset--;)
       iter++;
 
     if (count == 0) {
-      count = std::numeric_limits<int>::max();
+      count = map.size();
     }
 
-    for (; iter != set.end() && count > 0; iter++)
+    std::vector<std::string> result;
+    result.reserve(count);
+
+    for (; iter != set.rend() && count; iter++, count--)
       result.emplace_back(iter->second);
 
     return result;
@@ -92,18 +93,19 @@ public:
                                                              int count) {
     processPeriodic();
 
-    std::vector<std::pair<std::string, int>> result;
-
-    std::set<std::pair<int, std::string>>::iterator iter = set.begin();
+    std::set<std::pair<int, std::string>>::reverse_iterator iter = set.rbegin();
 
     for (; offset--;)
       iter++;
 
     if (count == 0) {
-      count = std::numeric_limits<int>::max();
+      count = map.size();
     }
 
-    for (; iter != set.end() && count > 0; iter++)
+    std::vector<std::pair<std::string, int>> result;
+    result.reserve(count);
+
+    for (; iter != set.rend() && count; iter++, count--)
       result.push_back({iter->second, iter->first});
 
     return result;
