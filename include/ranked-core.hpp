@@ -204,9 +204,6 @@ private:
   void processPeriodic() {
     auto now = getTimeStamp();
 
-    std::cout << now << '\n';
-    std::cout << minHeap.top()->expireTime << '\n';
-
     while (!minHeap.empty() && minHeap.top()->expireTime <= now) {
       set_erase(minHeap.top()->member);
       map[minHeap.top()->member] -= minHeap.top()->increment;
